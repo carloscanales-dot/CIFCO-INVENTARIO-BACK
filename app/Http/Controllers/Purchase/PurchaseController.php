@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Gate;
 use App\Models\Purchase\PurchaseDetail;
 use App\Http\Resources\Purchase\PurchaseResource;
 use App\Http\Resources\Purchase\PurchaseCollection;
+use Illuminate\Support\Facades\DB;
+
 
 class PurchaseController extends Controller
 {
@@ -38,7 +40,7 @@ class PurchaseController extends Controller
             "purchases" => PurchaseCollection::make($purchases),
         ]);
     }
-    
+
     public function config() {
         $warehouses = Warehouse::where("state",1)->get();
         $units = Unit::select("id","name")->where("state",1)->get();
@@ -77,48 +79,80 @@ class PurchaseController extends Controller
      */
     public function store(Request $request)
     {
-        // warehouse_id
-        // provider_id
-        // date_emision
-        // type_comprobant
-        // n_comprobant
-        // purchase_details
-        // description
-        // total
-        // importe
-        // igv
-        Gate::authorize("create",Purchase::class);
-        $purchase = Purchase::create([
-            "warehouse_id" => $request->warehouse_id,
-            "user_id" => auth('api')->user()->id,
-            "sucursale_id" => auth('api')->user()->sucursale_id,
-            "date_emision" => $request->date_emision,
-            "type_comprobant" => $request->type_comprobant,
-            "n_comprobant" => $request->n_comprobant,
-            "provider_id" => $request->provider_id,
-            "total" => $request->total,
-            "importe" => $request->importe,
-            "igv" => $request->igv,
-            "description" => $request->description,
+        Gate::authorize("create", Purchase::class);
+
+        $request->validate([
+            'warehouse_id' => 'required|integer',
+            'provider_id' => 'required|integer',
+            'date_emision' => 'required|date',
+            'date_document' => 'nullable|date',
+
+            'type_comprobant' => 'required|string',
+            'n_comprobant' => 'required|string',
+            'n_odc' => 'nullable|string',
+
+            'total' => 'required|numeric',
+            'importe' => 'required|numeric',
+            'igv' => 'required|numeric',
+
+            'purchase_details' => 'required|array|min:1',
+            'purchase_details.*.unit_id' => 'required|integer',
+            'purchase_details.*.price_unit' => 'required|numeric',
+            'purchase_details.*.quantity' => 'required|numeric|min:1',
+            'purchase_details.*.total' => 'required|numeric',
         ]);
 
-        $purchase_details = $request->purchase_details;
+        DB::beginTransaction();
 
-        foreach ($purchase_details as $key => $purchase_detail) {
-            PurchaseDetail::create([
-                "purchase_id" => $purchase->id,
-                "product_id" => $purchase_detail["product"]["id"],
-                "unit_id" => $purchase_detail["unit_id"],
-                "price_unit" => $purchase_detail["price_unit"],
-                "total" => $purchase_detail["total"],
-                "quantity" => $purchase_detail["quantity"],
+        try {
+
+            $purchase = Purchase::create([
+                "warehouse_id" => $request->warehouse_id,
+                "user_id" => auth('api')->user()->id,
+                "sucursale_id" => auth('api')->user()->sucursale_id,
+
+                "date_emision" => $request->date_emision,
+                "date_document" => $request->date_document,
+
+                "type_comprobant" => $request->type_comprobant,
+                "n_comprobant" => $request->n_comprobant,
+                "n_odc" => $request->n_odc,
+
+                "provider_id" => $request->provider_id,
+                "total" => $request->total,
+                "importe" => $request->importe,
+                "igv" => $request->igv,
+                "description" => $request->description,
             ]);
-        }
 
-        return response()->json([
-            "message" => 200,
-        ]);
+            foreach ($request->purchase_details as $purchase_detail) {
+                PurchaseDetail::create([
+                    "purchase_id" => $purchase->id,
+                    "product_id" => $purchase_detail["product"]["id"],
+                    "unit_id" => $purchase_detail["unit_id"],
+                    "price_unit" => $purchase_detail["price_unit"],
+                    "quantity" => $purchase_detail["quantity"],
+                    "total" => $purchase_detail["total"],
+                ]);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                "message" => "Compra registrada correctamente"
+            ], 200);
+
+        } catch (\Throwable $e) {
+
+            DB::rollBack();
+
+            return response()->json([
+                "error" => "Error al registrar la compra",
+                "detail" => $e->getMessage()
+            ], 500);
+        }
     }
+
 
     /**
      * Display the specified resource.
@@ -138,20 +172,40 @@ class PurchaseController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        Gate::authorize("update",Purchase::class);
+        Gate::authorize("update", Purchase::class);
+
         $purchase = Purchase::findOrFail($id);
 
+        // (Opcional pero recomendado)
+        if ($purchase->state != 1) {
+            return response()->json([
+                "error" => "La compra no puede ser editada porque ya inició su proceso"
+            ], 403);
+        }
+
+        $request->validate([
+            'provider_id'     => 'required|integer',
+            'type_comprobant' => 'required|string',
+            'n_comprobant'    => 'required|string',
+            'n_odc'           => 'nullable|string',
+            'date_document'   => 'nullable|date',
+            'description'     => 'nullable|string',
+        ]);
+
         $purchase->update([
-            "provider_id" => $request->provider_id,
+            "provider_id"     => $request->provider_id,
             "type_comprobant" => $request->type_comprobant,
-            "n_comprobant" => $request->n_comprobant,
-            "description" => $request->description,
+            "n_comprobant"    => $request->n_comprobant,
+            "n_odc"           => $request->n_odc,
+            "date_document"   => $request->date_document,
+            "description"     => $request->description,
         ]);
 
         return response()->json([
-            "message" => 200
-        ]);
+            "message" => "Compra actualizada correctamente"
+        ], 200);
     }
+
 
     /**
      * Remove the specified resource from storage.

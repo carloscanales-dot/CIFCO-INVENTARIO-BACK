@@ -6,6 +6,8 @@ use App\Policies\RolePolicy;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
+use App\Models\Dispatch\Dispatch;
+use App\Policies\DispatchPolicy;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -15,6 +17,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         Gate::policy(Role::class,RolePolicy::class);
+        Gate::policy(Dispatch::class, DispatchPolicy::class);
     }
 
     /**

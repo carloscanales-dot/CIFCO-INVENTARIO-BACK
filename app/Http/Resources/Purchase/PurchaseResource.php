@@ -17,7 +17,7 @@ class PurchaseResource extends JsonResource
     {
         return [
             "id" => $this->resource->id,
-            
+
             "warehouse_id" => $this->resource->warehouse_id,
             "warehouse" => [
                 "name" => $this->resource->warehouse?->name ?? 'Sin almacén',
@@ -37,9 +37,14 @@ class PurchaseResource extends JsonResource
                 ? Carbon::parse($this->resource->date_emision)->format("Y-m-d")
                 : null,
 
+            "date_document" => $this->resource->date_document   // ✅ AÑADIR
+                ? Carbon::parse($this->resource->date_document)->format("Y-m-d")
+                : null,
+
             "state" => $this->resource->state,
             "type_comprobant" => $this->resource->type_comprobant,
             "n_comprobant" => $this->resource->n_comprobant,
+            "n_odc" => $this->resource->n_odc,
 
             "provider_id" => $this->resource->provider_id,
             "provider" => [

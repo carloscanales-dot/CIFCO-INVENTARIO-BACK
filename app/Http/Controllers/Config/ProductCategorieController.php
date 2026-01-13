@@ -24,7 +24,7 @@ class ProductCategorieController extends Controller
                     "id" => $categorie->id,
                     "title" => $categorie->title,
                     "state" => (int) $categorie->state,
-                    //"imagen" => $categorie->imagen ? env("APP_URL")."storage/".$categorie->imagen : NULL,
+                    "cod_presupuesto" => $categorie->cod_presupuesto, // <- agregado
                     "imagen" => $categorie->imagen ? asset('storage/'.$categorie->imagen) : NULL,
                     "created_at" => $categorie->created_at->format("Y-m-d h:i A"),
                 ];
@@ -49,6 +49,7 @@ class ProductCategorieController extends Controller
             $path = Storage::putFile("categories",$request->file("image"));
             $request->request->add(["imagen" => $path]);
         }
+
         $categorie = ProductCategorie::create($request->all());
 
         return response()->json([
@@ -57,19 +58,11 @@ class ProductCategorieController extends Controller
                 "id" => $categorie->id,
                 "title" => $categorie->title,
                 "state" => (int) $categorie->state,
-                //"imagen" => $categorie->imagen ? env("APP_URL")."storage/".$categorie->imagen : NULL,
+                "cod_presupuesto" => $categorie->cod_presupuesto, // <- agregado
                 "imagen" => $categorie->imagen ? asset('storage/'.$categorie->imagen) : NULL,
                 "created_at" => $categorie->created_at->format("Y-m-d h:i A"),
             ],
         ]);
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
     }
 
     /**
@@ -85,6 +78,7 @@ class ProductCategorieController extends Controller
             ]);
         }
         $categorie = ProductCategorie::findOrFail($id);
+
         if($request->hasFile("image")){
             if($categorie->imagen){
                 Storage::delete($categorie->imagen);
@@ -92,6 +86,7 @@ class ProductCategorieController extends Controller
             $path = Storage::putFile("categories",$request->file("image"));
             $request->request->add(["imagen" => $path]);
         }
+
         $categorie->update($request->all());
 
         return response()->json([
@@ -100,7 +95,7 @@ class ProductCategorieController extends Controller
                 "id" => $categorie->id,
                 "title" => $categorie->title,
                 "state" => (int) $categorie->state,
-                //"imagen" => $categorie->imagen ? env("APP_URL")."storage/".$categorie->imagen : NULL,
+                "cod_presupuesto" => $categorie->cod_presupuesto, // <- agregado
                 "imagen" => $categorie->imagen ? asset('storage/'.$categorie->imagen) : NULL,
                 "created_at" => $categorie->created_at->format("Y-m-d h:i A"),
             ],

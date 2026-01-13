@@ -12,9 +12,10 @@ class ProductCategorie extends Model
     protected $fillable = [
         "title",
         "imagen",
-        "state"
+        "state",
+        'cod_presupuesto',
     ];
-    
+
     public function setCreatedAtAttribute($value)
     {
     	date_default_timezone_set('America/Lima');

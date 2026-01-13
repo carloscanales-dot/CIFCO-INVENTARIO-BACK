@@ -18,10 +18,15 @@ class Purchase extends Model
         "warehouse_id",
         "user_id",
         "sucursale_id",
+
         "date_emision",
+        "date_document",
+
         "state",
         "type_comprobant",
         "n_comprobant",
+        "n_odc",
+
         "provider_id",
         "total",
         "importe",
@@ -29,17 +34,11 @@ class Purchase extends Model
         "description"
     ];
 
-    public function setCreatedAtAttribute($value)
-    {
-    	date_default_timezone_set('America/Lima');
-        $this->attributes["created_at"]= Carbon::now();
-    }
+    protected $casts = [
+    'date_emision'  => 'datetime',
+    'date_document' => 'datetime',
+    ];
 
-    public function setUpdatedAtAttribute($value)
-    {
-    	date_default_timezone_set("America/Lima");
-        $this->attributes["updated_at"]= Carbon::now();
-    }
 
     public function purchase_details(){
         return $this->hasMany(PurchaseDetail::class,"purchase_id");
@@ -62,6 +61,13 @@ class Purchase extends Model
         return Carbon::parse($this->date_emision)->format("Y/m/d");
     }
 
+    public function getDateDocumentFormatAttribute(){
+    return $this->date_document
+        ? Carbon::parse($this->date_document)->format("Y/m/d")
+        : null;
+    }
+
+
     public function scopeFilterAdvance($query,$search,$warehouse_id,$unit_id,$provider_id,$type_comprobant,$start_date,$end_date,$search_product,$user){
 
         if($search){
@@ -75,7 +81,7 @@ class Purchase extends Model
         if($provider_id){
             $query->where("provider_id",$provider_id);
         }
-        
+
         if($type_comprobant){
             $query->where("type_comprobant",$type_comprobant);
         }

@@ -13,22 +13,27 @@ class UnitController extends Controller
      */
     public function index(Request $request)
     {
-        $search = $request->get("search");
-        //
-        $units = Unit::where("name","ilike","%".$search."%")->orderBy("id","desc")->get();
+        $search = $request->get('search');
+
+        $units = Unit::when($search, function ($query) use ($search) {
+            $query->where('name', 'ilike', "%{$search}%");
+        })
+        ->orderBy('id', 'desc')
+        ->get();
 
         return response()->json([
-            "units" => $units->map(function($unit) {
+            'units' => $units->map(function ($unit) {
                 return [
-                    "id" => $unit->id,
-                    "name" => $unit->name,
-                    "description" => $unit->description,
-                    "state" => $unit->state,
-                    "created_at" => $unit->created_at->format("Y/m/d h:i:s"),
+                    'id' => $unit->id,
+                    'name' => $unit->name,
+                    'description' => $unit->description,
+                    'state' => $unit->state,
+                    'created_at' => $unit->created_at->format('Y/m/d H:i:s'),
                 ];
             })
         ]);
     }
+
 
     /**
      * Store a newly created resource in storage.
@@ -46,7 +51,7 @@ class UnitController extends Controller
         }
         // $request->all() -> name, address y state
         $unit = Unit::create($request->all());
-        
+
         return response()->json([
             "message" => 200,
             "unit" => [
@@ -84,7 +89,7 @@ class UnitController extends Controller
         // $request->all() -> name, address y state
         $unit = Unit::findOrFail($id);
         $unit->update($request->all());
-        
+
         return response()->json([
             "message" => 200,
             "unit" => [
@@ -106,7 +111,7 @@ class UnitController extends Controller
         $unit->delete();
 
         return response()->json([
-            "message" => 200 
+            "message" => 200
         ]);
     }
 }

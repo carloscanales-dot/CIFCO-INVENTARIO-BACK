@@ -1,5 +1,5 @@
 <?php
- 
+
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Kpi\KpiController;
@@ -25,7 +25,9 @@ use App\Http\Controllers\Config\ProductCategorieController;
 use App\Http\Controllers\Purchase\PurchaseDetailController;
 use App\Http\Controllers\Product\ProductWarehouseController;
 use App\Http\Controllers\Transport\TransportDetailController;
- 
+use App\Http\Controllers\Dispatch\DispatchController;
+use App\Http\Controllers\Inventory\InventoryController;
+
 Route::group([
     // 'middleware' => 'api',
     'prefix' => 'auth',
@@ -41,7 +43,7 @@ Route::group([
 Route::group([
     "middleware" => ["auth:api"]
 ],function($router) {
-    
+
     Route::resource("role",RoleController::class);
 
     Route::get("users/config",[UserController::class,'config']);
@@ -67,12 +69,15 @@ Route::group([
     Route::resource("products",ProductController::class);
 
     Route::group(['middleware' => ['permission:show_inventory_product']],function() {
+        Route::post("inventory/list",[InventoryController::class,"list"]);
+        Route::get("inventory-excel",[InventoryController::class,"download_excel"]);
         Route::resource("product-warehouse",ProductWarehouseController::class);
     });
     Route::group(['middleware' => ['permission:show_wallet_price_product']],function() {
         Route::resource("product-wallet",ProductWalletController::class);
     });
 
+    Route::get("clients/debug/info",[ClientController::class,"debug"]);
     Route::resource("clients",ClientController::class);
 
     Route::get("sales/config",[SaleController::class,"config"]);
@@ -89,6 +94,10 @@ Route::group([
         Route::get("refound_products/search-sale/{sale_id}",[SaleRefounProductController::class,"search_sale"]);
         Route::resource("refound_products",SaleRefounProductController::class);
     });
+
+    Route::get("dispatches/config",[DispatchController::class,"config"]);
+    Route::post("dispatches/index",[DispatchController::class,"index"]);
+    Route::resource("dispatches",DispatchController::class);
 
     Route::get("purchase/config",[PurchaseController::class,"config"]);
     Route::post("purchase/index",[PurchaseController::class,"index"]);

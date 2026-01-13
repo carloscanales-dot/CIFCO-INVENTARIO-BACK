@@ -27,13 +27,13 @@ class ClienteResource extends JsonResource
             "n_document"  => $this->resource->n_document,
             "birth_date"  => Carbon::parse($this->resource->birth_date)->format("Y-m-d"),
             "user_id"  => $this->resource->user_id,
-            "user" => [
+            "user" => $this->resource->user ? [
                 "full_name" => $this->resource->user->name.' '.$this->resource->user->surname,
-            ],
+            ] : null,
             "sucursale_id"  => $this->resource->sucursale_id,
-            "sucursale" => [
+            "sucursale" => $this->resource->sucursale ? [
                 "name" => $this->resource->sucursale->name,
-            ],
+            ] : null,
             "state"  => $this->resource->state,
             "gender"  => $this->resource->gender,
             /*"ubigeo_region"  => $this->resource->ubigeo_region,

@@ -13,18 +13,75 @@ use App\Http\Resources\Cliente\ClienteCollection;
 class ClientController extends Controller
 {
     /**
+     * Debug endpoint to check authentication and permissions
+     */
+    public function debug(Request $request)
+    {
+        /** @var \App\Models\User $user */
+        $user = auth('api')->user();
+
+        if(!$user) {
+            return response()->json([
+                "authenticated" => false,
+                "message" => "Usuario no autenticado"
+            ]);
+        }
+
+        $canView = $user->can("list_client");
+        $totalClients = Client::count();
+
+        $clientsQuery = Client::query();
+
+        if($user->role_id != 1){
+            if($user->role_id == 2){
+                if($user->sucursale_id) {
+                    $clientsQuery->where("sucursale_id",$user->sucursale_id);
+                }
+            }else{
+                $clientsQuery->where("user_id",$user->id);
+            }
+        }
+
+        $filteredClients = $clientsQuery->count();
+
+        return response()->json([
+            "authenticated" => true,
+            "user" => [
+                "id" => $user->id,
+                "name" => $user->name,
+                "role_id" => $user->role_id,
+                "sucursale_id" => $user->sucursale_id,
+            ],
+            "permissions" => [
+                "can_list_client" => $canView,
+                "has_list_client_permission" => $user->hasPermissionTo("list_client"),
+            ],
+            "clients" => [
+                "total_in_db" => $totalClients,
+                "available_for_user" => $filteredClients,
+            ],
+        ]);
+    }
+    /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
         Gate::authorize("viewAny",Client::class);
-        $search = $request->get("search");
+        $search = $request->get("search") ?? '';
         $user = auth('api')->user();
-        $clients = Client::where(DB::raw("clients.full_name || '' || clients.n_document || '' || clients.phone || '' || COALESCE(clients.email,'')"),"ilike","%".$search."%")
+
+        $clients = Client::where(function($query) use($search) {
+                        if($search) {
+                            $query->where(DB::raw("CONCAT(COALESCE(clients.full_name,''), COALESCE(clients.n_document,''), COALESCE(clients.phone,''), COALESCE(clients.email,''))"),"ilike","%".$search."%");
+                        }
+                    })
                     ->where(function($query) use($user){
                         if($user->role_id != 1){
                             if($user->role_id == 2){
-                                $query->where("sucursale_id",$user->surcursale_id);
+                                if($user->sucursale_id) {
+                                    $query->where("sucursale_id",$user->sucursale_id);
+                                }
                             }else{
                                 $query->where("user_id",$user->id);
                             }
