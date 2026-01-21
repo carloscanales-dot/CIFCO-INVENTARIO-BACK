@@ -16,6 +16,7 @@ class Purchase extends Model
     use SoftDeletes;
     protected $fillable = [
         "warehouse_id",
+        "tipo_entrada",
         "user_id",
         "sucursale_id",
 

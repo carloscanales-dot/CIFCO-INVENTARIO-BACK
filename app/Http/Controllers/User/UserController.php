@@ -150,6 +150,9 @@ class UserController extends Controller
         }
         $user = User::findOrFail($id);
 
+        // Guardar el role_id anterior ANTES de actualizar
+        $old_role_id = $user->role_id;
+
         if($request->hasFile("imagen")){
             if($user->avatar){
                 Storage::delete($user->avatar);
@@ -161,13 +164,18 @@ class UserController extends Controller
             $request->request->add(["password" => bcrypt($request->password)]);
         }
         $user->update($request->all());
-        // CONTADOR -> ADMINISTRADOR DE CUENTA
-        if($request->role_id != $user->role_id){
-            $role_old =  Role::findOrFail($user->role_id);
-            $user->removeRole($role_old);
 
+        // Sincronizar con Spatie Permission si el rol cambió
+        if($request->role_id && $request->role_id != $old_role_id){
+            // Remover rol anterior
+            $user->syncRoles([]); // Limpia todos los roles
+
+            // Asignar nuevo rol
             $role_new = Role::findOrFail($request->role_id);
             $user->assignRole($role_new);
+
+            // Limpiar caché de permisos
+            app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
         }
 
         return response()->json([

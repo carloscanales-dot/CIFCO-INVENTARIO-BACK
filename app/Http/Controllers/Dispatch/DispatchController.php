@@ -80,6 +80,7 @@ class DispatchController extends Controller
                 'area_id'            => $request->area_id,
                 'reference'          => $request->reference,
                 'date_emision'       => $request->date_emision,
+                'date_document'      => $request->date_document,
                 'description'        => $request->description,
                 'state'              => 1,
             ]);

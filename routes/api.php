@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\UserSessionController;
 use App\Http\Controllers\Kpi\KpiController;
 use App\Http\Controllers\Sale\SaleController;
 use App\Http\Controllers\User\UserController;
@@ -46,6 +47,13 @@ Route::group([
 
     Route::resource("role",RoleController::class);
 
+    // Rutas para las sesiones de usuarios (solo administradores)
+    Route::prefix('user-sessions')->group(function() {
+        Route::get('/', [UserSessionController::class, 'index']);
+        Route::get('/stats', [UserSessionController::class, 'stats']);
+        Route::put('/{id}/close', [UserSessionController::class, 'closeSession']);
+    });
+
     Route::get("users/config",[UserController::class,'config']);
     Route::post("users/{id}",[UserController::class,'update']);
     Route::resource("users",UserController::class);
@@ -70,7 +78,7 @@ Route::group([
 
     Route::group(['middleware' => ['permission:show_inventory_product']],function() {
         Route::post("inventory/list",[InventoryController::class,"list"]);
-        Route::get("inventory-excel",[InventoryController::class,"download_excel"]);
+        Route::post("inventory-excel",[InventoryController::class,"download_excel"]);
         Route::resource("product-warehouse",ProductWarehouseController::class);
     });
     Route::group(['middleware' => ['permission:show_wallet_price_product']],function() {

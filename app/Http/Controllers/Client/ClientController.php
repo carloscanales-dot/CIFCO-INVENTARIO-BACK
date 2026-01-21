@@ -32,12 +32,18 @@ class ClientController extends Controller
 
         $clientsQuery = Client::query();
 
+        // Role 1 (Super Admin): Ve todos los clientes
+        // Role 2 (Admin Sucursal): Ve clientes de su sucursal (si tiene sucursal asignada)
+        // Otros roles: Solo ven sus propios clientes
         if($user->role_id != 1){
             if($user->role_id == 2){
+                // Admin de sucursal: solo filtra si tiene sucursal asignada
                 if($user->sucursale_id) {
                     $clientsQuery->where("sucursale_id",$user->sucursale_id);
                 }
+                // Si no tiene sucursal, ve todos (no se aplica filtro)
             }else{
+                // Otros roles: solo sus clientes
                 $clientsQuery->where("user_id",$user->id);
             }
         }
@@ -77,12 +83,18 @@ class ClientController extends Controller
                         }
                     })
                     ->where(function($query) use($user){
+                        // Role 1 (Super Admin): Ve todos los clientes
+                        // Role 2 (Admin Sucursal): Ve clientes de su sucursal (si tiene sucursal asignada)
+                        // Otros roles: Solo ven sus propios clientes
                         if($user->role_id != 1){
                             if($user->role_id == 2){
+                                // Admin de sucursal: solo filtra si tiene sucursal asignada
                                 if($user->sucursale_id) {
                                     $query->where("sucursale_id",$user->sucursale_id);
                                 }
+                                // Si no tiene sucursal asignada, ve todos (no aplicar filtro)
                             }else{
+                                // Otros roles: solo sus clientes
                                 $query->where("user_id",$user->id);
                             }
                         }

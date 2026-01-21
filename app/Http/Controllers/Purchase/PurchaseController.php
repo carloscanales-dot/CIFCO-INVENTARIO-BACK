@@ -83,6 +83,7 @@ class PurchaseController extends Controller
 
         $request->validate([
             'warehouse_id' => 'required|integer',
+            'tipo_entrada' => 'required|string|in:compra,regreso',
             'provider_id' => 'required|integer',
             'date_emision' => 'required|date',
             'date_document' => 'nullable|date',
@@ -108,6 +109,7 @@ class PurchaseController extends Controller
 
             $purchase = Purchase::create([
                 "warehouse_id" => $request->warehouse_id,
+                "tipo_entrada" => $request->tipo_entrada ?? 'compra',
                 "user_id" => auth('api')->user()->id,
                 "sucursale_id" => auth('api')->user()->sucursale_id,
 
@@ -184,6 +186,7 @@ class PurchaseController extends Controller
         }
 
         $request->validate([
+            'tipo_entrada'    => 'nullable|string|in:compra,regreso',
             'provider_id'     => 'required|integer',
             'type_comprobant' => 'required|string',
             'n_comprobant'    => 'required|string',
@@ -193,6 +196,7 @@ class PurchaseController extends Controller
         ]);
 
         $purchase->update([
+            "tipo_entrada"    => $request->tipo_entrada ?? $purchase->tipo_entrada,
             "provider_id"     => $request->provider_id,
             "type_comprobant" => $request->type_comprobant,
             "n_comprobant"    => $request->n_comprobant,

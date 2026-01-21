@@ -21,12 +21,14 @@ class Dispatch extends Model
         'area_id',
         'reference',
         'date_emision',
+        'date_document',
         'description',
         'state',
     ];
 
     protected $casts = [
         'date_emision' => 'datetime',
+        'date_document' => 'datetime',
     ];
 
     public function details()
